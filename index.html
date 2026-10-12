@@ -1371,7 +1371,12 @@ const PURCHASE_HINT = "https://item.taobao.com/item.htm?ft=t&id=1089295347267&sp
 const APP_VERSION = "1.0.2";
 const DATA_VERSION = "2025-12-01";
 const REMOTE_MANIFEST = "https://cdn.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js";
-const REMOTE_BACKUP = "https://raw.githubusercontent.com/XingChenZhe/ozon-tool-update/main/app.js";
+const REMOTE_MIRRORS = [
+  "https://fastly.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js",
+  "https://gcore.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js",
+  "https://testingcf.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js",
+  "https://raw.githubusercontent.com/XingChenZhe/ozon-tool-update/main/app.js"
+];
 const REMOTE_HOME = "https://cdn.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/index.html";
 /* 激活码校验盐值：必须与 gen_license.py 的 SALT 完全一致（均为 ASCII），更换时两处一起改 */
 const LIC_SALT = "ozon-lic-v1-salt-2026";
@@ -1649,7 +1654,7 @@ initRate();
       .catch(function () { if (timer) clearTimeout(timer); /* 静默 */ });
   }
   loadOne(REMOTE_MANIFEST);
-  if (REMOTE_BACKUP) loadOne(REMOTE_BACKUP);
+  for (var k = 0; k < REMOTE_MIRRORS.length; k++) loadOne(REMOTE_MIRRORS[k]);
 })();
 </script>
 <script>try{LA.init({id:"3RU1gatooZRxvPbk", ck:"3RU1gatooZRxvPbk"})}catch(e){}</script>
