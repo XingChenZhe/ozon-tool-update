@@ -1678,6 +1678,15 @@ initRate();
       if (!better) return;
     }
     appliedV = rv; appliedR = rr;
+    /* 远程样式注入：布局/样式类更新（如手机版适配）无需换文件即可自动生效 */
+    if (r.style && !document.getElementById('ozonRemoteStyle')) {
+      try {
+        var st = document.createElement('style');
+        st.id = 'ozonRemoteStyle';
+        st.textContent = r.style;
+        document.head.appendChild(st);
+      } catch (e) { /* 静默 */ }
+    }
     var html = '';
     if (r.notice) html += '<div class="remote-notice">' + esc(r.notice) + '</div>';
     if (r.tools && r.tools.length) {
