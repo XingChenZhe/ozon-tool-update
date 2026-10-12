@@ -1633,7 +1633,7 @@ initRate();
   function loadOne(url) {
     if (!url) return;
     var ctrl = ('AbortController' in window) ? new AbortController() : null;
-    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 6000) : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 20000) : null;
     fetch(url + (url.indexOf('?') >= 0 ? '&' : '?') + '_t=' + Date.now(),
           ctrl ? { signal: ctrl.signal } : {})
       .then(function (r) { return r.ok ? r.text() : Promise.reject(new Error('http ' + r.status)); })
