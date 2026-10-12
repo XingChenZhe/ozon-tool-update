@@ -1371,6 +1371,7 @@ const PURCHASE_HINT = "https://item.taobao.com/item.htm?ft=t&id=1089295347267&sp
 const APP_VERSION = "1.0.1";
 const DATA_VERSION = "2025-12-01";
 const REMOTE_MANIFEST = "https://cdn.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js";
+const REMOTE_BACKUP = "https://raw.githubusercontent.com/XingChenZhe/ozon-tool-update/main/app.js";
 const REMOTE_HOME = "https://cdn.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/index.html";
 /* 激活码校验盐值：必须与 gen_license.py 的 SALT 完全一致（均为 ASCII），更换时两处一起改 */
 const LIC_SALT = "ozon-lic-v1-salt-2026";
@@ -1626,10 +1627,16 @@ initRate();
     box.innerHTML = html;
   }
   var sc = document.createElement('script');
-  sc.src = REMOTE_MANIFEST;
-  sc.onload = function () { try { apply(window.__OZON_REMOTE__); } catch (e) {} };
-  sc.onerror = function () { /* 离线：静默使用本地版 */ };
-  document.head.appendChild(sc);
+  function loadManifest(url, onok, onfail) {
+    var s = document.createElement('script');
+    s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_t=' + Date.now();
+    s.onload = function () { try { onok(window.__OZON_REMOTE__); } catch (e) { onfail && onfail(); } };
+    s.onerror = function () { onfail && onfail(); };
+    document.head.appendChild(s);
+  }
+  loadManifest(REMOTE_MANIFEST, apply, function () {
+    if (REMOTE_BACKUP) loadManifest(REMOTE_BACKUP, apply, function () { /* 离线：静默使用本地版 */ });
+  });
 })();
 </script>
 <script>try{LA.init({id:"3RU1gatooZRxvPbk", ck:"3RU1gatooZRxvPbk"})}catch(e){}</script>
