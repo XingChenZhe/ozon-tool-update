@@ -1630,10 +1630,8 @@ initRate();
     box.innerHTML = html;
   }
   var sc = document.createElement('script');
-  var TRIES = [REMOTE_MANIFEST, REMOTE_BACKUP, REMOTE_MANIFEST];
-  function tryFetch(i) {
-    if (i >= TRIES.length || !TRIES[i]) return;
-    var url = TRIES[i];
+  function loadOne(url) {
+    if (!url) return;
     var ctrl = ('AbortController' in window) ? new AbortController() : null;
     var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 6000) : null;
     fetch(url + (url.indexOf('?') >= 0 ? '&' : '?') + '_t=' + Date.now(),
@@ -1641,12 +1639,12 @@ initRate();
       .then(function (r) { return r.ok ? r.text() : Promise.reject(new Error('http ' + r.status)); })
       .then(function (txt) {
         if (timer) clearTimeout(timer);
-        try { (0, eval)(txt); apply(window.__OZON_REMOTE__); }
-        catch (e) { tryFetch(i + 1); }
+        try { (0, eval)(txt); apply(window.__OZON_REMOTE__); } catch (e) { /* 静默 */ }
       })
-      .catch(function () { if (timer) clearTimeout(timer); tryFetch(i + 1); });
+      .catch(function () { if (timer) clearTimeout(timer); /* 静默 */ });
   }
-  tryFetch(0);
+  loadOne(REMOTE_MANIFEST);
+  if (REMOTE_BACKUP) loadOne(REMOTE_BACKUP);
 })();
 </script>
 <script>try{LA.init({id:"3RU1gatooZRxvPbk", ck:"3RU1gatooZRxvPbk"})}catch(e){}</script>
