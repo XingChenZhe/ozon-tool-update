@@ -1610,8 +1610,11 @@ initRate();
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+  var applied = null;
   function apply(r) {
     if (!r || typeof r !== 'object') return;
+    if (applied && (!r.version || r.version <= applied)) return;
+    applied = r.version || 'local';
     var html = '';
     if (r.notice) html += '<div class="remote-notice">' + esc(r.notice) + '</div>';
     if (r.tools && r.tools.length) {
@@ -1634,9 +1637,8 @@ initRate();
     s.onerror = function () { onfail && onfail(); };
     document.head.appendChild(s);
   }
-  loadManifest(REMOTE_MANIFEST, apply, function () {
-    if (REMOTE_BACKUP) loadManifest(REMOTE_BACKUP, apply, function () { /* 离线：静默使用本地版 */ });
-  });
+  loadManifest(REMOTE_MANIFEST, apply, function () { /* jsdelivr 不可用时由 backup 兜底 */ });
+  if (REMOTE_BACKUP) loadManifest(REMOTE_BACKUP, apply, function () { /* 离线：静默使用本地版 */ });
 })();
 </script>
 <script>try{LA.init({id:"3RU1gatooZRxvPbk", ck:"3RU1gatooZRxvPbk"})}catch(e){}</script>
