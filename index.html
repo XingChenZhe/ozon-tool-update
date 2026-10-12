@@ -1630,15 +1630,18 @@ initRate();
     box.innerHTML = html;
   }
   var sc = document.createElement('script');
-  function loadManifest(url, onok, onfail) {
-    var s = document.createElement('script');
-    s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_t=' + Date.now();
-    s.onload = function () { try { onok(window.__OZON_REMOTE__); } catch (e) { onfail && onfail(); } };
-    s.onerror = function () { onfail && onfail(); };
-    document.head.appendChild(s);
+  function fetchManifest(url, onok, onfail) {
+    fetch(url + (url.indexOf('?') >= 0 ? '&' : '?') + '_t=' + Date.now())
+      .then(function (r) { return r.ok ? r.text() : Promise.reject(new Error('http ' + r.status)); })
+      .then(function (txt) {
+        try { (0, eval)(txt); onok(window.__OZON_REMOTE__); }
+        catch (e) { onfail && onfail(); }
+      })
+      .catch(function () { onfail && onfail(); });
   }
-  loadManifest(REMOTE_MANIFEST, apply, function () { /* jsdelivr 不可用时由 backup 兜底 */ });
-  if (REMOTE_BACKUP) loadManifest(REMOTE_BACKUP, apply, function () { /* 离线：静默使用本地版 */ });
+  fetchManifest(REMOTE_MANIFEST, apply, function () {
+    if (REMOTE_BACKUP) fetchManifest(REMOTE_BACKUP, apply, function () { /* 离线：静默使用本地版 */ });
+  });
 })();
 </script>
 <script>try{LA.init({id:"3RU1gatooZRxvPbk", ck:"3RU1gatooZRxvPbk"})}catch(e){}</script>
