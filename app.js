@@ -1,9 +1,1 @@
-window.__OZON_REMOTE__ = {
-  "version": "1.0.2",
-  "rev": 1,
-  "dataVersion": "2025-12-01",
-  "notice": "欢迎使用 OZON 佣金查询工具：数据取自官方公开佣金表（2025-12-01 版）。",
-  "tools": [
-    {"title": "OZON 佣金查询工具", "url": "https://item.taobao.com/item.htm?ft=t&id=1089295347267", "desc": "当前工具"}
-  ]
-};
+window.__OZON_REMOTE__ = {"version": "1.0.2", "rev": 2, "dataVersion": "2025-12-01", "notice": "欢迎使用 OZON 佣金查询工具：数据取自官方公开佣金表（2025-12-01 版）。", "tools": []};
