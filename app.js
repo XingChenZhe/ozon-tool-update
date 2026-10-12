@@ -1,5 +1,5 @@
 window.__OZON_REMOTE__ = {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "rev": 1,
   "dataVersion": "2025-12-01",
   "notice": "欢迎使用 OZON 佣金查询工具：数据取自官方公开佣金表（2025-12-01 版）。",
