@@ -1610,11 +1610,16 @@ initRate();
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
-  var applied = null;
+  var appliedV = null, appliedR = -1;
   function apply(r) {
     if (!r || typeof r !== 'object') return;
-    if (applied && (!r.version || r.version <= applied)) return;
-    applied = r.version || 'local';
+    var rv = String(r.version || '');
+    var rr = (r.rev !== undefined && isFinite(Number(r.rev))) ? Number(r.rev) : 0;
+    if (appliedV !== null) {
+      var better = (rv !== appliedV) ? (rv > appliedV) : (rr > appliedR);
+      if (!better) return;
+    }
+    appliedV = rv; appliedR = rr;
     var html = '';
     if (r.notice) html += '<div class="remote-notice">' + esc(r.notice) + '</div>';
     if (r.tools && r.tools.length) {
