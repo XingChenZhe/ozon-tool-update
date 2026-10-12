@@ -366,6 +366,56 @@
   .remote-upgrade a{color:#fff;background:var(--accent);border-radius:8px;padding:4px 14px;font-weight:600;text-decoration:none;font-size:12.5px;}
   .remote-upgrade a:hover{background:var(--accent-deep);}
 
+  /* ===== 手机端适配 ===== */
+  @media (max-width:768px){
+    header{padding:16px 14px 8px;}
+    .brand-mark{width:34px;height:34px;border-radius:10px;}
+    .brand-mark svg{width:18px;height:18px;}
+    .brand h1{font-size:17px;}
+    .brand p{font-size:12px;}
+    .badge{font-size:11.5px;padding:5px 10px;}
+    main{padding:10px 14px 16px;gap:14px;}
+    .query{position:static;}
+    .panel-hd{padding:13px 16px;}
+    .panel-hd h2{font-size:14.5px;}
+    .qbody{padding:14px 16px 16px;}
+    .result-body{padding:14px 16px 16px;min-height:280px;}
+    .searchbox input,.filter-box input{font-size:16px;padding:11px 12px 11px 38px;}
+    .filter-box input{padding:9px 10px 9px 32px;}
+    .price-wrap input{font-size:17px;}
+    .rate-input{width:96px;font-size:15px;padding:8px;}
+    .mode-tab{padding:10px 0;font-size:14px;}
+    .dd-list{max-height:260px;}
+    .type-list{max-height:260px;}
+    .cards{grid-template-columns:1fr;gap:10px;}
+    .card .rate{font-size:26px;}
+    .ladder-strip{gap:6px;}
+    .step{padding:8px 6px 7px;}
+    .step .pct{font-size:16px;}
+    table.rates{font-size:12px;}
+    table.rates th,table.rates td{padding:7px 5px;}
+    footer{padding:4px 14px 22px;font-size:11px;}
+    #remoteBox{padding:0 14px;}
+    .remote-notice,.remote-tools,.remote-upgrade{font-size:12.5px;}
+    .lic-lock{padding:22px 20px;}
+    .lic-modal-box{padding:20px 18px;}
+    .slogan-banner{font-size:13.5px;padding:7px 10px;}
+  }
+  @media (max-width:480px){
+    header{gap:10px;}
+    .brand p{font-size:11.5px;}
+    .badge{max-width:100%;}
+    .ladder-cap{flex-wrap:wrap;gap:6px;}
+    .empty-state{min-height:230px;padding:16px;}
+    .empty-state .big{font-size:14px;}
+    .empty-state .steps{font-size:12px;}
+    .prod-name{font-size:17px;}
+    .rate-row{gap:6px;}
+    .rate-btn{padding:7px 12px;font-size:12.5px;flex:1;text-align:center;}
+    .lic-btn{font-size:12px;padding:6px 12px;}
+    .lic-lock input,.lic-act input{font-size:16px;}
+  }
+
 </style>
 </head>
 <body>
@@ -1371,7 +1421,7 @@ const TRIAL_DAYS = 15;
 const PURCHASE_HINT = "https://item.taobao.com/item.htm?ft=t&id=1089295347267&spm=a21dvs.23580594.0.0.47b32c1b2fyLYe";
 
 /* 自动更新（远程清单，REMOTE_* 由部署时填入） */
-const APP_VERSION = "1.0.3";
+const APP_VERSION = "1.0.4";
 const DATA_VERSION = "2025-12-01";
 const REMOTE_MANIFEST = "https://cdn.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js";
 const REMOTE_API = "https://api.github.com/repos/XingChenZhe/ozon-tool-update/contents/app.js?ref=main";
