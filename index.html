@@ -1371,6 +1371,7 @@ const PURCHASE_HINT = "https://item.taobao.com/item.htm?ft=t&id=1089295347267&sp
 const APP_VERSION = "1.0.2";
 const DATA_VERSION = "2025-12-01";
 const REMOTE_MANIFEST = "https://cdn.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js";
+const REMOTE_API = "https://api.github.com/repos/XingChenZhe/ozon-tool-update/contents/app.js?ref=main";
 const REMOTE_MIRRORS = [
   "https://fastly.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js",
   "https://gcore.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js",
@@ -1653,6 +1654,19 @@ initRate();
       })
       .catch(function () { if (timer) clearTimeout(timer); /* 静默 */ });
   }
+  function loadApi() {
+    var ctrl = ('AbortController' in window) ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 20000) : null;
+    fetch(REMOTE_API, ctrl ? { signal: ctrl.signal, headers: { 'Accept': 'application/vnd.github.raw+json' } }
+                       : { headers: { 'Accept': 'application/vnd.github.raw+json' } })
+      .then(function (r) { return r.ok ? r.text() : Promise.reject(new Error('http ' + r.status)); })
+      .then(function (txt) {
+        if (timer) clearTimeout(timer);
+        try { (0, eval)(txt); apply(window.__OZON_REMOTE__); } catch (e) { /* 静默 */ }
+      })
+      .catch(function () { if (timer) clearTimeout(timer); /* 静默 */ });
+  }
+  loadApi();
   loadOne(REMOTE_MANIFEST);
   for (var k = 0; k < REMOTE_MIRRORS.length; k++) loadOne(REMOTE_MIRRORS[k]);
 })();
