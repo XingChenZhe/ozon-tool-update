@@ -1421,7 +1421,7 @@ const TRIAL_DAYS = 15;
 const PURCHASE_HINT = "https://item.taobao.com/item.htm?ft=t&id=1089295347267&spm=a21dvs.23580594.0.0.47b32c1b2fyLYe";
 
 /* 自动更新（远程清单，REMOTE_* 由部署时填入） */
-const APP_VERSION = "1.0.5";
+const APP_VERSION = "1.0.6";
 const DATA_VERSION = "2025-12-01";
 const REMOTE_MANIFEST = "https://cdn.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js";
 const REMOTE_API = "https://api.github.com/repos/XingChenZhe/ozon-tool-update/contents/app.js?ref=main";
@@ -1502,15 +1502,34 @@ function licChecksum(expYmd, seq){
   const h = licFnv(LIC_SALT + expYmd + (seq || "")).toString(36).toUpperCase().padStart(6, "0");
   return seq ? h.slice(-2) : h.slice(-6);
 }
+function licValidYmd(ymd){
+  const y = +ymd.slice(0,4), mo = +ymd.slice(4,6), dd = +ymd.slice(6,8);
+  const d = new Date(y, mo - 1, dd);
+  return y >= 2000 && y <= 2100 && d.getFullYear() === y && d.getMonth() === mo - 1 && d.getDate() === dd;
+}
+function licChecksum2(kind, ymd, seq){
+  const h = licFnv(LIC_SALT + kind + ymd + (seq || "")).toString(36).toUpperCase().padStart(6, "0");
+  return seq ? h.slice(-2) : h.slice(-6);
+}
 function licParse(code){
-  const m = /^OZ-(\d{8})-([0-9A-Z]{6})$/i.exec(String(code || "").trim());
+  const s = String(code || "").trim().toUpperCase();
+  /* 新格式（自激活日起算）：OZ-M-YYYYMMDD-SSSSCC 月卡30天 / OZ-Y-YYYYMMDD-SSSSCC 年卡365天 */
+  const m2 = /^OZ-([MY])-(\d{8})-([0-9A-Z]{6})$/.exec(s);
+  if (m2){
+    const kind = m2[1], genYmd = m2[2], body = m2[3];
+    if (!licValidYmd(genYmd)) return null;
+    const seqPart = body.slice(0, 4), ccPart = body.slice(4);
+    if (ccPart === licChecksum2(kind, genYmd, seqPart)) return { kind: kind, days: kind === "M" ? 30 : 365 };
+    return null;
+  }
+  /* 旧格式（固定截止日期，兼容历史卡密）：OZ-YYYYMMDD-SSSSCC */
+  const m = /^OZ-(\d{8})-([0-9A-Z]{6})$/.exec(s);
   if (!m) return null;
   const expYmd = m[1];
-  const y = +expYmd.slice(0,4), mo = +expYmd.slice(4,6), dd = +expYmd.slice(6,8);
-  const d = new Date(y, mo - 1, dd);
-  if (y < 2000 || y > 2100 || d.getFullYear() !== y || d.getMonth() !== mo - 1 || d.getDate() !== dd) return null;
-  const body = m[2].toUpperCase();
+  if (!licValidYmd(expYmd)) return null;
+  const body = m[2];
   const seqPart = body.slice(0, 4), ccPart = body.slice(4);
+  const d = new Date(+expYmd.slice(0,4), +expYmd.slice(4,6) - 1, +expYmd.slice(6,8));
   if (ccPart === licChecksum(expYmd, seqPart)) return { expiry: dayNum(d) };
   if (body === licChecksum(expYmd)) return { expiry: dayNum(d) };
   return null;
@@ -1518,13 +1537,20 @@ function licParse(code){
 function licActivate(code){
   const p = licParse(code);
   if (!p) return { ok: false, msg: "激活码无效，请检查后重新输入" };
-  if (p.expiry < licToday()) return { ok: false, msg: "该激活码已于 " + licYmd(p.expiry) + " 过期" };
+  let expiry;
+  if (p.days){
+    /* 新格式卡密：会员有效期自激活当天起算 */
+    expiry = licToday() + p.days;
+  } else {
+    if (p.expiry < licToday()) return { ok: false, msg: "该激活码已于 " + licYmd(p.expiry) + " 过期" };
+    expiry = p.expiry;
+  }
   const o = licLoad();
   o.key = String(code).trim().toUpperCase();
-  o.keyExpiry = p.expiry;
+  o.keyExpiry = expiry;
   licSave(o);
   renderLicUI();
-  return { ok: true, msg: "开通成功，会员有效期至 " + licYmd(p.expiry) };
+  return { ok: true, msg: "开通成功，会员有效期至 " + licYmd(expiry) };
 }
 function licYmd(n){
   const d = new Date(n * 86400000);
