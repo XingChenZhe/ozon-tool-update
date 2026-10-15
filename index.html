@@ -416,6 +416,43 @@
     .lic-lock input,.lic-act input{font-size:16px;}
   }
 
+  /* ===== 全局模式切换（佣金 / OGL 运费） ===== */
+  .gmode-tabs{
+    max-width:1080px;margin:0 auto 16px;display:flex;gap:6px;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:5px;
+    box-shadow:var(--shadow);
+  }
+  .gmode-tab{
+    flex:1;padding:10px 0;border:none;background:transparent;border-radius:9px;
+    font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;
+    transition:all .15s;
+  }
+  .gmode-tab.on{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(10,92,255,.28);}
+
+  /* ===== OGL 运费计算器 ===== */
+  .og-dims{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .og-dims label{font-size:11.5px;color:var(--faint);display:block;margin-bottom:4px;text-align:center;}
+  .og-dims input{
+    width:100%;padding:9px 6px;text-align:center;font-size:14px;font-weight:600;font-family:inherit;
+    border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);
+  }
+  .og-dims input:focus{outline:none;border-color:var(--accent);background:var(--surface);}
+  .grp-tag{
+    display:inline-block;background:var(--accent-soft);color:var(--accent-deep);
+    font-weight:700;font-size:13px;border-radius:999px;padding:5px 14px;margin-bottom:14px;
+  }
+  .og-kv{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed var(--line);font-size:14px;}
+  .og-kv .k{color:var(--muted);}
+  .og-kv .v{font-weight:700;}
+  .og-total{
+    margin-top:14px;background:linear-gradient(135deg,#EAF1FF,#F0F7FF);
+    border:1px solid #C9DBFF;border-radius:12px;padding:14px 16px;
+    display:flex;justify-content:space-between;align-items:baseline;
+  }
+  .og-total .k{font-size:13px;color:var(--muted);}
+  .og-total .v{font-size:24px;font-weight:800;color:var(--accent-deep);}
+  .og-total .v small{font-size:13px;font-weight:600;color:var(--muted);}
+  table.og-rates tr.on td{background:var(--accent-soft);font-weight:700;}
 </style>
 </head>
 <body>
@@ -441,6 +478,11 @@
 </header>
 <div class="slogan-banner">跨境电商&nbsp;&nbsp;利润为王</div>
 
+<div class="gmode-tabs" role="tablist">
+  <button class="gmode-tab on" data-gmode="comm" role="tab" aria-selected="true">佣金查询</button>
+  <button class="gmode-tab" data-gmode="freight" role="tab" aria-selected="false">OGL 运费计算</button>
+</div>
+
 <main>
   <!-- ===== 左侧：查询区 ===== -->
   <aside class="query panel">
@@ -450,13 +492,13 @@
     </div>
     <div class="qbody">
 
-      <div class="mode-tabs" role="tablist">
+      <div class="mode-tabs comm-block" role="tablist">
         <button class="mode-tab on" data-mode="search" role="tab" aria-selected="true">搜索产品</button>
         <button class="mode-tab" data-mode="browse" role="tab" aria-selected="false">按类目浏览</button>
       </div>
 
       <!-- 搜索 -->
-      <section id="searchMode">
+      <section id="searchMode" class="comm-block">
         <div class="field">
           <label for="q">产品关键词</label>
           <div class="searchbox">
@@ -481,7 +523,7 @@
       </section>
 
       <!-- 浏览 -->
-      <section id="browseMode" hidden>
+      <section id="browseMode" hidden class="comm-block">
         <div class="field">
           <label>输入类目/产品关键词</label>
           <div class="searchbox">
@@ -505,7 +547,7 @@
       </section>
 
       <!-- 售价 -->
-      <div class="field">
+      <div class="field comm-block">
         <label for="price">产品售价（卢布）</label>
         <div class="price-wrap">
           <span class="cur num">₽</span>
@@ -515,7 +557,7 @@
       </div>
 
       <!-- 人民币换算 -->
-      <div class="field">
+      <div class="field comm-block">
         <label for="cny">人民币（¥）</label>
         <div class="price-wrap">
           <span class="cur num">¥</span>
@@ -530,6 +572,47 @@
         <div class="rate-status" id="rateStatus"></div>
       </div>
 
+      <!-- ===== OGL 运费计算输入 ===== -->
+      <div id="freightQuery" hidden>
+        <div class="field">
+          <label for="ogPrice">货件商品总价值（¥）</label>
+          <div class="price-wrap">
+            <span class="cur num">¥</span>
+            <input id="ogPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例如 60 / 435" aria-label="货件商品总价值">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="ogWeight">实际重量（克）</label>
+          <div class="price-wrap">
+            <span class="cur num">g</span>
+            <input id="ogWeight" type="number" min="0" step="1" inputmode="decimal" placeholder="例如 80 / 2200" aria-label="实际重量">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>外箱尺寸（厘米，Big 组按体积重计费）</label>
+          <div class="og-dims">
+            <div><label>长 cm</label><input id="ogLen" type="number" min="0" step="0.1" inputmode="decimal" placeholder="10"></div>
+            <div><label>宽 cm</label><input id="ogWid" type="number" min="0" step="0.1" inputmode="decimal" placeholder="8"></div>
+            <div><label>高 cm</label><input id="ogHei" type="number" min="0" step="0.1" inputmode="decimal" placeholder="5"></div>
+          </div>
+          <div class="bracket-hint">体积重量 = 长 × 宽 × 高 ÷ 12（仅 Big / Premium Big 组使用）</div>
+        </div>
+
+        <div class="field">
+          <label>汇率（自动取实时）</label>
+          <div class="rate-row">
+            <span class="rate-lab">1 人民币 =</span>
+            <input id="ogRate" type="number" min="0" step="0.0001" inputmode="decimal" class="rate-input num" aria-label="运费汇率" value="12.69">
+            <span class="rate-lab">卢布 ₽</span>
+            <button id="ogRateBtn" class="rate-btn" type="button">获取实时</button>
+          </div>
+          <div class="rate-status" id="ogRateStatus"></div>
+          <div class="bracket-hint">电子服务费按货值 2% 计，每件封顶 15~200 卢布，按此汇率折算人民币</div>
+        </div>
+      </div>
+
     </div>
   </aside>
 
@@ -541,7 +624,7 @@
     </div>
     <div class="result-body">
 
-      <div class="empty-state" id="emptyState">
+      <div class="empty-state comm-block" id="emptyState">
         <div class="big">选择产品，查看 OZON 官方佣金比例</div>
         <div class="steps">
           ① 左侧搜索产品名称（支持中 / 俄 / 英文）<br>
@@ -550,7 +633,7 @@
         </div>
       </div>
 
-      <div id="resultView" hidden>
+      <div id="resultView" hidden class="comm-block">
         <div class="crumb" id="crumb"></div>
         <div class="prod-name" id="prodName"></div>
         <div class="prod-sub" id="prodSub"></div>
@@ -587,6 +670,33 @@
           </thead>
           <tbody id="rateRows"></tbody>
         </table>
+      </div>
+
+      <!-- ===== OGL 运费结果 ===== -->
+      <div id="freightResult" hidden>
+        <span class="grp-tag" id="ogGroup">Extra Small</span>
+
+        <div class="og-kv"><span class="k">计费重量</span><span class="v" id="ogCW">80 克</span></div>
+        <div class="og-kv"><span class="k">国际运输费（固定部分）</span><span class="v" id="ogFix">¥2.90</span></div>
+        <div class="og-kv"><span class="k">国际运输费（重量部分）</span><span class="v" id="ogVar">¥1.98</span></div>
+        <div class="og-kv"><span class="k">电子服务费（2%货值）</span><span class="v" id="ogEfee">¥1.53</span></div>
+
+        <div class="og-total">
+          <span class="k">单件总配送费</span>
+          <span class="v" id="ogTotal">¥4.90<small> / 件</small></span>
+        </div>
+
+        <div class="table-title" style="margin-top:18px;">OGL 费率对照（¥/件 + ¥每克）</div>
+        <table class="rates og-rates">
+          <thead>
+            <tr><th>评分组</th><th>固定费</th><th>单价(¥/g)</th><th>适用货值</th><th>适用重量</th></tr>
+          </thead>
+          <tbody id="ogRateRows"></tbody>
+        </table>
+        <div class="bracket-hint" style="margin-top:10px;">
+          规则取自 OGL 官方说明（2026-08-24 起）：评分组按「货件重量 × 货件商品总价值」二维划分；
+          Big / Premium Big 组计费重量取实际重量与体积重量（长×宽×高÷12）的较大值。结果仅供参考，实际费用以 Ozon 卖家后台为准。
+        </div>
       </div>
 
     </div>
@@ -1421,7 +1531,7 @@ const TRIAL_DAYS = 15;
 const PURCHASE_HINT = "https://item.taobao.com/item.htm?ft=t&id=1089295347267&spm=a21dvs.23580594.0.0.47b32c1b2fyLYe";
 
 /* 自动更新（远程清单，REMOTE_* 由部署时填入） */
-const APP_VERSION = "1.0.6";
+const APP_VERSION = "1.0.7";
 const DATA_VERSION = "2025-12-01";
 const REMOTE_MANIFEST = "https://cdn.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js";
 const REMOTE_API = "https://api.github.com/repos/XingChenZhe/ozon-tool-update/contents/app.js?ref=main";
@@ -1682,6 +1792,139 @@ setMode("search");
 render();
 initLic();
 initRate();
+
+/* ============ OGL 运费计算 ============ */
+var OGL_RATE = {
+  "Extra Small":    [2.90,  0.0247, "≤135 ¥",      "≤500 g"],
+  "Budget":         [22.25, 0.0164, "≤135 ¥",      "500 g 以上"],
+  "Small":          [15.48, 0.0242, "135~635 ¥",   "500~2000 g"],
+  "Big":            [34.82, 0.0164, "135~635 ¥",   "2000 g 以上"],
+  "Premium Small":  [21.28, 0.0242, ">635 ¥",       "≤5000 g"],
+  "Premium Big":    [59.97, 0.0222, ">635 ¥",       "5000 g 以上"]
+};
+var OGL_ORDER = ["Extra Small","Budget","Small","Big","Premium Small","Premium Big"];
+
+function oglNum(id){ var v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+function oglGroupOf(w, v){
+  if (v > 635) return w <= 5000 ? "Premium Small" : "Premium Big";
+  if (v > 135) return w <= 2000 ? "Small" : "Big";
+  return w <= 500 ? "Extra Small" : "Budget";
+}
+
+function oglRenderTable(){
+  var rows = "";
+  OGL_ORDER.forEach(function(g){
+    var r = OGL_RATE[g];
+    rows += '<tr data-g="' + g + '"><td>' + g + '</td><td>' + r[0].toFixed(2) + '</td><td>' + r[1].toFixed(4) + '</td><td>' + r[2] + '</td><td>' + r[3] + '</td></tr>';
+  });
+  document.getElementById("ogRateRows").innerHTML = rows;
+}
+
+function oglCalc(){
+  var price = oglNum("ogPrice");
+  var w = oglNum("ogWeight");
+  var L = oglNum("ogLen"), Wc = oglNum("ogWid"), H = oglNum("ogHei");
+  var rate = oglNum("ogRate");
+  if (!(rate > 0)) rate = 12.69;
+
+  var g = oglGroupOf(w, price);
+  var fix = OGL_RATE[g][0], varG = OGL_RATE[g][1];
+
+  var vol = (L * Wc * H) / 12;
+  var cw = w, volTxt = "";
+  if (g === "Big" || g === "Premium Big"){
+    cw = Math.max(w, vol);
+    volTxt = "（体积重 " + vol.toFixed(1) + " g，已取较大值）";
+  } else if (L * Wc * H > 0){
+    volTxt = "（非大体积组，按实际重量）";
+  }
+
+  var ship = fix + varG * cw;
+  var efeeRub = Math.max(15, Math.min(200, price * rate * 0.02));
+  var efeeCny = efeeRub / rate;
+  var total = ship + efeeCny;
+
+  document.getElementById("ogGroup").textContent = g;
+  document.getElementById("ogCW").innerHTML = cw.toFixed(1) + " 克<small style='font-weight:400;color:var(--faint);margin-left:6px;'>" + volTxt + "</small>";
+  document.getElementById("ogFix").textContent = "¥" + fix.toFixed(2);
+  document.getElementById("ogVar").innerHTML = "¥" + (varG * cw).toFixed(2) + "<small style='font-weight:400;color:var(--faint);margin-left:6px;'>" + varG.toFixed(4) + " × " + cw.toFixed(1) + " g</small>";
+  document.getElementById("ogEfee").innerHTML = "¥" + efeeCny.toFixed(2) + "<small style='font-weight:400;color:var(--faint);margin-left:6px;'>≈" + efeeRub.toFixed(1) + " ₽</small>";
+  document.getElementById("ogTotal").innerHTML = "¥" + total.toFixed(2) + "<small> / 件</small>";
+
+  var trs = document.querySelectorAll("#ogRateRows tr");
+  for (var i = 0; i < trs.length; i++){
+    trs[i].className = (trs[i].getAttribute("data-g") === g) ? "on" : "";
+  }
+}
+
+/* 全局模式切换 */
+function setGMode(mode){
+  var isFreight = (mode === "freight");
+  // 左栏佣金块 / 运费块
+  var commEls = document.querySelectorAll(".comm-block");
+  for (var i = 0; i < commEls.length; i++){
+    commEls[i].style.display = isFreight ? "none" : "";
+    // browseMode 原本 hidden，恢复其 hidden 属性
+    if (commEls[i].id === "browseMode") commEls[i].hidden = true;
+  }
+  document.getElementById("freightQuery").hidden = !isFreight;
+  document.getElementById("freightResult").hidden = !isFreight;
+  // tabs 高亮
+  var tabs = document.querySelectorAll(".gmode-tab");
+  for (var j = 0; j < tabs.length; j++){
+    var on = (tabs[j].getAttribute("data-gmode") === mode);
+    tabs[j].classList.toggle("on", on);
+    tabs[j].setAttribute("aria-selected", on ? "true" : "false");
+  }
+  // 面板标题
+  document.querySelector(".query.panel .panel-hd h2").textContent = isFreight ? "货件信息" : "查询条件";
+  document.querySelector(".query.panel .panel-hd .hint").textContent = isFreight ? "输入即算" : "支持 中文 / 俄文 / 英文";
+  document.querySelector(".panel .panel-hd h2").textContent = isFreight ? "OGL 运费结果" : "佣金结果";
+  document.querySelector(".panel .panel-hd .hint").textContent = isFreight ? "按货值与重量自动评分" : "选择产品后自动计算";
+  if (isFreight) oglCalc();
+}
+
+/* 运费输入绑定 */
+["ogPrice","ogWeight","ogLen","ogWid","ogHei","ogRate"].forEach(function(id){
+  document.getElementById(id).addEventListener("input", oglCalc);
+});
+document.querySelectorAll(".gmode-tab").forEach(function(btn){
+  btn.addEventListener("click", function(){ setGMode(btn.getAttribute("data-gmode")); });
+});
+oglRenderTable();
+
+/* 运费实时汇率按钮（复用佣金工具 fetchLiveRate 同一接口） */
+document.getElementById("ogRateBtn").addEventListener("click", async function(){
+  var btn = this;
+  btn.disabled = true;
+  document.getElementById("ogRateStatus").textContent = "正在获取实时汇率…";
+  var sources = [
+    { url: "https://open.er-api.com/v6/latest/CNY", pick: function(d){ return d && d.rates && d.rates.RUB; }, name: "open.er-api.com" },
+    { url: "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/cny.json", pick: function(d){ return d && d.cny && d.cny.rub; }, name: "currency-api" }
+  ];
+  var got = false;
+  for (var i = 0; i < sources.length; i++){
+    var s = sources[i];
+    try{
+      var ctrl = new AbortController();
+      var timer = setTimeout(function(){ ctrl.abort(); }, 8000);
+      var resp = await fetch(s.url, { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!resp.ok) continue;
+      var d = await resp.json();
+      var r = Number(s.pick(d));
+      if (!(r > 0)) continue;
+      document.getElementById("ogRate").value = (Math.round(r * 10000) / 10000);
+      document.getElementById("ogRateStatus").style.color = "#0F766E";
+      document.getElementById("ogRateStatus").textContent = "实时汇率：1 ¥ = " + (Math.round(r * 10000) / 10000) + " ₽ · " + s.name;
+      oglCalc();
+      got = true;
+      break;
+    }catch(e){}
+  }
+  if (!got) document.getElementById("ogRateStatus").textContent = "获取失败，已使用默认 12.69，可手改";
+  btn.disabled = false;
+});
 </script>
 <script charset="UTF-8" async id="LA_COLLECT" src="https://sdk.51.la/js-sdk-pro.min.js"></script>
 <script>
