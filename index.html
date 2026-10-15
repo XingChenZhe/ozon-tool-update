@@ -479,8 +479,8 @@
 <div class="slogan-banner">跨境电商&nbsp;&nbsp;利润为王</div>
 
 <div class="gmode-tabs" role="tablist">
-  <button class="gmode-tab on" data-gmode="comm" role="tab" aria-selected="true">佣金查询</button>
-  <button class="gmode-tab" data-gmode="freight" role="tab" aria-selected="false">OGL 运费计算</button>
+  <button class="gmode-tab on" data-gmode="freight" role="tab" aria-selected="true">OGL 运费计算</button>
+  <button class="gmode-tab" data-gmode="comm" role="tab" aria-selected="false">佣金查询</button>
 </div>
 
 <main>
@@ -1531,7 +1531,7 @@ const TRIAL_DAYS = 15;
 const PURCHASE_HINT = "https://item.taobao.com/item.htm?ft=t&id=1089295347267&spm=a21dvs.23580594.0.0.47b32c1b2fyLYe";
 
 /* 自动更新（远程清单，REMOTE_* 由部署时填入） */
-const APP_VERSION = "1.0.7";
+const APP_VERSION = "1.0.8";
 const DATA_VERSION = "2025-12-01";
 const REMOTE_MANIFEST = "https://cdn.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js";
 const REMOTE_API = "https://api.github.com/repos/XingChenZhe/ozon-tool-update/contents/app.js?ref=main";
@@ -1892,6 +1892,7 @@ document.querySelectorAll(".gmode-tab").forEach(function(btn){
   btn.addEventListener("click", function(){ setGMode(btn.getAttribute("data-gmode")); });
 });
 oglRenderTable();
+setGMode('freight');
 
 /* 运费实时汇率按钮（复用佣金工具 fetchLiveRate 同一接口） */
 document.getElementById("ogRateBtn").addEventListener("click", async function(){
