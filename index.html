@@ -575,10 +575,14 @@
       <!-- ===== OGL 运费计算输入 ===== -->
       <div id="freightQuery" hidden>
         <div class="field">
-          <label for="ogPrice">货件商品总价值（¥）</label>
+          <label>货件商品总价值（卢布 ₽ / 人民币 ¥，二选一输入自动换算）</label>
           <div class="price-wrap">
+            <span class="cur num">₽</span>
+            <input id="ogPriceRub" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例如 800" aria-label="货件商品总价值卢布">
+          </div>
+          <div class="price-wrap" style="margin-top:8px;">
             <span class="cur num">¥</span>
-            <input id="ogPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例如 60 / 435" aria-label="货件商品总价值">
+            <input id="ogPriceCny" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例如 60 / 435" aria-label="货件商品总价值人民币">
           </div>
         </div>
 
@@ -1531,7 +1535,7 @@ const TRIAL_DAYS = 15;
 const PURCHASE_HINT = "https://item.taobao.com/item.htm?ft=t&id=1089295347267&spm=a21dvs.23580594.0.0.47b32c1b2fyLYe";
 
 /* 自动更新（远程清单，REMOTE_* 由部署时填入） */
-const APP_VERSION = "1.0.8";
+const APP_VERSION = "1.0.10";
 const DATA_VERSION = "2025-12-01";
 const REMOTE_MANIFEST = "https://cdn.jsdelivr.net/gh/XingChenZhe/ozon-tool-update@main/app.js";
 const REMOTE_API = "https://api.github.com/repos/XingChenZhe/ozon-tool-update/contents/app.js?ref=main";
@@ -1821,7 +1825,7 @@ function oglRenderTable(){
 }
 
 function oglCalc(){
-  var price = oglNum("ogPrice");
+  var price = oglNum("ogPriceCny");  // 以人民币为准（联动框自动换算）
   var w = oglNum("ogWeight");
   var L = oglNum("ogLen"), Wc = oglNum("ogWid"), H = oglNum("ogHei");
   var rate = oglNum("ogRate");
@@ -1885,7 +1889,33 @@ function setGMode(mode){
 }
 
 /* 运费输入绑定 */
-["ogPrice","ogWeight","ogLen","ogWid","ogHei","ogRate"].forEach(function(id){
+var ogPriceLock = null;  // 防止双币联动循环：'rub' | 'cny'
+document.getElementById("ogPriceRub").addEventListener("input", function(){
+  if (ogPriceLock === "rub") return;
+  var rub = oglNum("ogPriceRub"), rate = oglNum("ogRate");
+  ogPriceLock = "rub";
+  document.getElementById("ogPriceCny").value = (rate > 0 && rub > 0) ? (rub / rate).toFixed(2) : "";
+  ogPriceLock = null;
+  oglCalc();
+});
+document.getElementById("ogPriceCny").addEventListener("input", function(){
+  if (ogPriceLock === "cny") return;
+  var cny = oglNum("ogPriceCny"), rate = oglNum("ogRate");
+  ogPriceLock = "cny";
+  document.getElementById("ogPriceRub").value = (rate > 0 && cny > 0) ? (cny * rate).toFixed(2) : "";
+  ogPriceLock = null;
+  oglCalc();
+});
+document.getElementById("ogRate").addEventListener("input", function(){
+  var cny = oglNum("ogPriceCny"), rate = oglNum("ogRate");
+  if (cny > 0 && rate > 0){
+    ogPriceLock = "cny";
+    document.getElementById("ogPriceRub").value = (cny * rate).toFixed(2);
+    ogPriceLock = null;
+  }
+  oglCalc();
+});
+["ogWeight","ogLen","ogWid","ogHei"].forEach(function(id){
   document.getElementById(id).addEventListener("input", oglCalc);
 });
 document.querySelectorAll(".gmode-tab").forEach(function(btn){
@@ -1894,38 +1924,48 @@ document.querySelectorAll(".gmode-tab").forEach(function(btn){
 oglRenderTable();
 setGMode('freight');
 
-/* 运费实时汇率按钮（复用佣金工具 fetchLiveRate 同一接口） */
+/* 汇率自动更新（打开页面自动获取一次，保留手动按钮） */
+async function ogEnsureRate(){
+  var ok = state && state.rate && state.rate > 0;
+  if (!ok){
+    try{ await fetchLiveRate(); }catch(e){}
+  }
+  if (state && state.rate && state.rate > 0){
+    document.getElementById("ogRate").value = round4(state.rate);
+    document.getElementById("ogRateStatus").style.color = "#0F766E";
+    document.getElementById("ogRateStatus").textContent = "实时汇率已自动更新：1 ¥ = " + round4(state.rate) + " ₽" + (state.rateSrc ? " · " + state.rateSrc : "");
+    var cny = oglNum("ogPriceCny");
+    if (cny > 0){
+      ogPriceLock = "cny";
+      document.getElementById("ogPriceRub").value = (cny * state.rate).toFixed(2);
+      ogPriceLock = null;
+    }
+    oglCalc();
+  } else {
+    document.getElementById("ogRateStatus").style.color = "#E5484D";
+    document.getElementById("ogRateStatus").textContent = "自动获取汇率失败，请点击「获取实时」手动获取";
+  }
+}
+
+/* 运费实时汇率手动按钮（与佣金工具同一接口） */
 document.getElementById("ogRateBtn").addEventListener("click", async function(){
   var btn = this;
   btn.disabled = true;
+  document.getElementById("ogRateStatus").style.color = "";
   document.getElementById("ogRateStatus").textContent = "正在获取实时汇率…";
-  var sources = [
-    { url: "https://open.er-api.com/v6/latest/CNY", pick: function(d){ return d && d.rates && d.rates.RUB; }, name: "open.er-api.com" },
-    { url: "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/cny.json", pick: function(d){ return d && d.cny && d.cny.rub; }, name: "currency-api" }
-  ];
-  var got = false;
-  for (var i = 0; i < sources.length; i++){
-    var s = sources[i];
-    try{
-      var ctrl = new AbortController();
-      var timer = setTimeout(function(){ ctrl.abort(); }, 8000);
-      var resp = await fetch(s.url, { signal: ctrl.signal });
-      clearTimeout(timer);
-      if (!resp.ok) continue;
-      var d = await resp.json();
-      var r = Number(s.pick(d));
-      if (!(r > 0)) continue;
-      document.getElementById("ogRate").value = (Math.round(r * 10000) / 10000);
-      document.getElementById("ogRateStatus").style.color = "#0F766E";
-      document.getElementById("ogRateStatus").textContent = "实时汇率：1 ¥ = " + (Math.round(r * 10000) / 10000) + " ₽ · " + s.name;
-      oglCalc();
-      got = true;
-      break;
-    }catch(e){}
+  try{ await fetchLiveRate(); }catch(e){}
+  if (state && state.rate && state.rate > 0){
+    document.getElementById("ogRate").value = round4(state.rate);
+    document.getElementById("ogRateStatus").style.color = "#0F766E";
+    document.getElementById("ogRateStatus").textContent = "实时汇率已更新：1 ¥ = " + round4(state.rate) + " ₽ · " + (state.rateSrc || "");
+    oglCalc();
+  } else {
+    document.getElementById("ogRateStatus").style.color = "#E5484D";
+    document.getElementById("ogRateStatus").textContent = "手动获取失败，请检查网络后重试";
   }
-  if (!got) document.getElementById("ogRateStatus").textContent = "获取失败，已使用默认 12.69，可手改";
   btn.disabled = false;
 });
+ogEnsureRate();
 </script>
 <script charset="UTF-8" async id="LA_COLLECT" src="https://sdk.51.la/js-sdk-pro.min.js"></script>
 <script>
