@@ -677,7 +677,8 @@
 
         <div class="card" style="margin-top:14px;">
           <div class="hd"><span class="dot" style="background:var(--accent);"></span><span class="scheme">单件总配送费</span><span class="sub">OGL 国际配送 · 每件</span></div>
-          <div class="rate num" id="ogTotal" style="color:var(--accent-deep);">¥4.90</div>
+          <div class="rate num" id="ogTotal" style="color:var(--accent-deep);">¥4.90<small> / 件</small></div>
+          <div class="fee" id="ogTotalFee">固定 ¥2.90 + 重量费 ¥1.98</div>
         </div>
 
         <div class="table-title" style="margin-top:18px;">OGL 费率对照（¥/件 + ¥每克）</div>
@@ -1841,6 +1842,7 @@ function oglCalc(){
   document.getElementById("ogFix").textContent = "¥" + fix.toFixed(2);
   document.getElementById("ogVar").innerHTML = "¥" + (varG * cw).toFixed(2) + "<small style='font-weight:400;color:var(--faint);margin-left:6px;'>" + varG.toFixed(4) + " × " + cw.toFixed(1) + " g</small>";
   document.getElementById("ogTotal").innerHTML = "¥" + total.toFixed(2) + "<small> / 件</small>";
+  document.getElementById("ogTotalFee").innerHTML = "固定 ¥" + fix.toFixed(2) + " + 重量费 ¥" + (varG * cw).toFixed(2);
 
   var trs = document.querySelectorAll("#ogRateRows tr");
   for (var i = 0; i < trs.length; i++){
